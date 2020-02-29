@@ -81,11 +81,6 @@ class WeakMapSuppliers {
       }
 
       @Override
-      public void putIfAbsent(final K key, final V value) {
-        map.putIfAbsent(key, value);
-      }
-
-      @Override
       public V computeIfAbsent(final K key, final ValueSupplier<? super K, ? extends V> supplier) {
         if (map.containsKey(key)) {
           return map.get(key);

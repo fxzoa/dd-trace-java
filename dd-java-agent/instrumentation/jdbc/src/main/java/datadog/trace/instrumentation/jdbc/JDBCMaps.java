@@ -1,8 +1,6 @@
 package datadog.trace.instrumentation.jdbc;
 
-import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
-
-import datadog.trace.bootstrap.WeakMap;
+import datadog.trace.agent.tooling.WeakCache;
 import datadog.trace.bootstrap.instrumentation.jdbc.DBInfo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,6 +11,7 @@ import java.sql.PreparedStatement;
  * <p>Should be injected into the bootstrap classpath.
  */
 public class JDBCMaps {
-  public static final WeakMap<Connection, DBInfo> connectionInfo = newWeakMap();
-  public static final WeakMap<PreparedStatement, String> preparedStatements = newWeakMap();
+  public static final WeakCache<Connection, DBInfo> connectionInfo = WeakCache.newWeakCache();
+  public static final WeakCache<PreparedStatement, String> preparedStatements =
+      WeakCache.newWeakCache();
 }

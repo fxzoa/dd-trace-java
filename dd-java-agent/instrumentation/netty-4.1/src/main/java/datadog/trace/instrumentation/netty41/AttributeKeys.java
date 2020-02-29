@@ -1,27 +1,26 @@
 package datadog.trace.instrumentation.netty41;
 
-import datadog.trace.bootstrap.WeakMap;
+import datadog.trace.agent.tooling.WeakCache;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler;
 import datadog.trace.instrumentation.netty41.server.HttpServerTracingHandler;
 import io.netty.util.AttributeKey;
-import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class AttributeKeys {
 
-  private static final WeakMap<ClassLoader, Map<String, AttributeKey<?>>> map =
-      WeakMap.Implementation.DEFAULT.get();
-
-  private static final WeakMap.ValueSupplier<ClassLoader, Map<String, AttributeKey<?>>>
-      mapSupplier =
-          new WeakMap.ValueSupplier<ClassLoader, Map<String, AttributeKey<?>>>() {
-            @Override
-            public Map<String, AttributeKey<?>> get(final ClassLoader ignored) {
-              return new ConcurrentHashMap<>();
-            }
-          };
+  private static final WeakCache<ClassLoader, ConcurrentMap<String, AttributeKey<?>>> map =
+      WeakCache.newWeakCache();
+  private static final Callable<ConcurrentMap<String, AttributeKey<?>>> mapSupplier =
+      new Callable<ConcurrentMap<String, AttributeKey<?>>>() {
+        @Override
+        public ConcurrentMap<String, AttributeKey<?>> call() {
+          return new ConcurrentHashMap<>();
+        }
+      };
 
   public static final AttributeKey<TraceScope.Continuation>
       PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY =
@@ -48,8 +47,8 @@ public class AttributeKeys {
    * cassandra driver.
    */
   private static <T> AttributeKey<T> attributeKey(final String key) {
-    final Map<String, AttributeKey<?>> classLoaderMap =
-        map.computeIfAbsent(AttributeKey.class.getClassLoader(), mapSupplier);
+    final ConcurrentMap<String, AttributeKey<?>> classLoaderMap =
+        map.getIfPresentOrCompute(AttributeKey.class.getClassLoader(), mapSupplier);
     if (classLoaderMap.containsKey(key)) {
       return (AttributeKey<T>) classLoaderMap.get(key);
     }

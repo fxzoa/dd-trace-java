@@ -16,8 +16,7 @@ public interface WeakMap<K, V> {
 
   void put(K key, V value);
 
-  void putIfAbsent(K key, V value);
-
+  @Deprecated
   V computeIfAbsent(K key, ValueSupplier<? super K, ? extends V> supplier);
 
   @Slf4j
@@ -62,6 +61,7 @@ public interface WeakMap<K, V> {
    * Supplies the value to be stored and it is called only when a value does not exists yet in the
    * registry.
    */
+  @Deprecated
   interface ValueSupplier<K, V> {
     V get(K key);
   }
@@ -91,19 +91,6 @@ public interface WeakMap<K, V> {
     @Override
     public void put(final K key, final V value) {
       map.put(key, value);
-    }
-
-    @Override
-    public void putIfAbsent(final K key, final V value) {
-      // We can't use putIfAbsent since it was added in 1.8.
-      // As a result, we must use double check locking.
-      if (!map.containsKey(key)) {
-        synchronized (this) {
-          if (!map.containsKey(key)) {
-            map.put(key, value);
-          }
-        }
-      }
     }
 
     @Override

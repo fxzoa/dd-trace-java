@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling;
 
+import datadog.common.exec.CommonTaskExecutor;
 import datadog.trace.agent.tooling.bytebuddy.DDCachingPoolStrategy;
 import datadog.trace.agent.tooling.bytebuddy.DDLocationStrategy;
 import datadog.trace.bootstrap.WeakMap;
@@ -12,6 +13,7 @@ import datadog.trace.bootstrap.WeakMap;
 public class AgentTooling {
 
   static {
+    boolean sd = CommonTaskExecutor.INSTANCE.isShutdown(); // TODO: classloading deadlock w/o it
     // WeakMap is used by other classes below, so we need to register the provider first.
     registerWeakMapProvider();
   }

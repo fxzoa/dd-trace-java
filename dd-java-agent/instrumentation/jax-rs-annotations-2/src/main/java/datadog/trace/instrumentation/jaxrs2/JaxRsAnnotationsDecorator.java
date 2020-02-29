@@ -1,12 +1,10 @@
 package datadog.trace.instrumentation.jaxrs2;
 
-import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
-
 import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.agent.tooling.ClassHierarchyIterable;
+import datadog.trace.agent.tooling.WeakCache;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.Tags;
 import java.lang.annotation.Annotation;
@@ -27,7 +25,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
   public static final JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
 
-  private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
+  private final WeakCache<Class, Map<Method, String>> resourceNames = WeakCache.newWeakCache();
 
   @Override
   protected String[] instrumentationNames() {
@@ -82,11 +80,11 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
    * @return The result can be an empty string but will never be {@code null}.
    */
   private String getPathResourceName(final Class target, final Method method) {
-    Map<Method, String> classMap = resourceNames.get(target);
-
+    Map<Method, String> classMap = resourceNames.getIfPresent(target);
+    // tests are failing if put is inside critical section here
     if (classMap == null) {
-      resourceNames.putIfAbsent(target, new ConcurrentHashMap<Method, String>());
-      classMap = resourceNames.get(target);
+      resourceNames.put(target, new ConcurrentHashMap<Method, String>());
+      classMap = resourceNames.getIfPresent(target);
       // classMap should not be null at this point because we have a
       // strong reference to target and don't manually clear the map.
     }

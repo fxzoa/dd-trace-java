@@ -57,7 +57,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   }
 
   public AgentSpan onConnection(final AgentSpan span, final Connection connection) {
-    DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
+    DBInfo dbInfo = JDBCMaps.connectionInfo.getIfPresent(connection);
     /**
      * Logic to get the DBInfo from a JDBC Connection, if the connection was not created via
      * Driver.connect, or it has never seen before, the connectionInfo map will return null and will
@@ -103,7 +103,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   }
 
   public AgentSpan onPreparedStatement(final AgentSpan span, final PreparedStatement statement) {
-    final String sql = JDBCMaps.preparedStatements.get(statement);
+    final String sql = JDBCMaps.preparedStatements.getIfPresent(statement);
     final String resourceName = sql == null ? DB_QUERY : sql;
     span.setTag(DDTags.RESOURCE_NAME, resourceName);
     span.setTag(Tags.COMPONENT, "java-jdbc-prepared_statement");
